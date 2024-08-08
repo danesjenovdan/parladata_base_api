@@ -11,7 +11,7 @@ from endpoints import (
     PublicPersonAnswersApi,
     LegislationApi,
     LegislationClassificationsApi,
-    self.parladata_api.sessions,
+    SpeechesApi,
     ProceduresApi,
     ProcedurePhasesApi,
     LegislationConsiderationApi,

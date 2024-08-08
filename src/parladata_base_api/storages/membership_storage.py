@@ -1,5 +1,5 @@
 import logging
-from storages.utils import Storage, ParladataObject
+from parladata_base_api.storages.utils import Storage, ParladataObject
 from collections import defaultdict
 from datetime import datetime
 

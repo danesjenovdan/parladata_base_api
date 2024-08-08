@@ -1,4 +1,4 @@
-from storages.utils import Storage, ParladataObject
+from parladata_base_api.storages.utils import Storage, ParladataObject
 
 
 class Motion(ParladataObject):

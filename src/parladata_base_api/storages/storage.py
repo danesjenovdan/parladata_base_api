@@ -1,11 +1,11 @@
-from storages.session_storage import SessionStorage
-from storages.legislation_storage import LegislationStorage
-from storages.people_storage import PeopleStorage
-from storages.organization_storage import OrganizationStorage
-from storages.question_storage import QuestionStorage
-from storages.membership_storage import MembershipStorage
-from storages.public_question_storage import PublicQuestionStorage
-from api.endpoints import ParladataApi
+from parladata_base_api.storages.session_storage import SessionStorage
+from parladata_base_api.storages.legislation_storage import LegislationStorage
+from parladata_base_api.storages.people_storage import PeopleStorage
+from parladata_base_api.storages.organization_storage import OrganizationStorage
+from parladata_base_api.storages.question_storage import QuestionStorage
+from parladata_base_api.storages.membership_storage import MembershipStorage
+from parladata_base_api.storages.public_question_storage import PublicQuestionStorage
+from parladata_base_api.api.endpoints import ParladataApi
 
 import logging
 

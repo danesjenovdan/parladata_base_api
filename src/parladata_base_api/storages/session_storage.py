@@ -1,6 +1,6 @@
-from storages.utils import Storage, ParladataObject
-from storages.vote_storage import VoteStorage
-from storages.agenda_item_storage import AgendaItemStorage
+from parladata_base_api.storages.utils import Storage, ParladataObject
+from parladata_base_api.storages.vote_storage import VoteStorage
+from parladata_base_api.storages.agenda_item_storage import AgendaItemStorage
 
 import logging
 
