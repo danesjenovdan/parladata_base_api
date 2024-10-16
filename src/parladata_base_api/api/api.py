@@ -43,24 +43,30 @@ class Api(object):
             for obj in page
         ]
 
-    def _get_object(self, object_id):
-        url = f"{self.base_url}/{self.endpoint}/{object_id}"
+    def _get_object(self, object_id, custom_endpoint=None):
+        url = f"{self.base_url}/{self.endpoint}/{object_id}/" + (
+            f"{custom_endpoint}/" if custom_endpoint else ""
+        )
         response = self.session.get(url)
         if response.status_code > 299:
             logger.warning(response.content)
             logger.warning(url)
         return response.json()
 
-    def _set_object(self, data):
-        url = f"{self.base_url}/{self.endpoint}/"
+    def _set_object(self, data, custom_endpoint=None):
+        url = f"{self.base_url}/{self.endpoint}/" + (
+            f"{custom_endpoint}/" if custom_endpoint else ""
+        )
         response = self.session.post(url, json=data)
         if response.status_code > 299:
             logger.warning(response.content)
             logger.warning(url)
         return response.json()
 
-    def _patch_object(self, object_id, data, files=None):
-        url = f"{self.base_url}/{self.endpoint}/{object_id}/"
+    def _patch_object(self, object_id, data, custom_endpoint=None, files=None):
+        url = f"{self.base_url}/{self.endpoint}/{object_id}/" + (
+            f"{custom_endpoint}/" if custom_endpoint else ""
+        )
         if files:
             response = self.session.patch(url, files=files)
         else:
@@ -70,8 +76,10 @@ class Api(object):
             logger.warning(url)
         return response.json()
 
-    def _delete_object(self, object_id):
-        url = f"{self.base_url}/{self.endpoint}/{object_id}/"
+    def _delete_object(self, object_id, custom_endpoint=None):
+        url = f"{self.base_url}/{self.endpoint}/{object_id}/" + (
+            f"{custom_endpoint}/" if custom_endpoint else ""
+        )
         response = self.session.delete(url)
         if response.status_code > 299:
             logger.warning(response.content)

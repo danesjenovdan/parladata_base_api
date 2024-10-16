@@ -1,7 +1,8 @@
 import logging
-from parladata_base_api.storages.utils import Storage, ParladataObject
 from collections import defaultdict
 from datetime import datetime
+
+from parladata_base_api.storages.utils import ParladataObject, Storage
 
 logger = logging.getLogger("logger")
 
@@ -95,7 +96,7 @@ class MembershipStorage(Storage):
         if not self.memberships:
             self.first_load = True
 
-    def add_or_get_object(self, data) -> Membership:
+    def get_or_add_object(self, data) -> Membership:
         if not self.memberships:
             self.load_data()
         key = Membership.get_key_from_dict(data)
@@ -122,13 +123,15 @@ class MembershipStorage(Storage):
         keep_memebrship_ids = []
         memberships_to_end = []
 
+        if self.first_load:
+            start_time = self.storage.mandate_start_time.isoformat()
+        else:
+            start_time = datetime.now().isoformat()
+
         for org_id, org_data in self.temporary_data.items():
             for single_org_membership in org_data:
                 # TODO: set start time
-                if self.first_load:
-                    start_time = self.storage.mandate_start_time.isoformat()
-                else:
-                    start_time = datetime.now().isoformat()
+
                 logger.debug(single_org_membership)
                 if single_org_membership["organization"]:
                     on_behalf_of = single_org_membership["organization"].id
@@ -139,7 +142,7 @@ class MembershipStorage(Storage):
                     )
 
                 if single_org_membership["type"] == "sabor":
-                    stored_membership = self.add_or_get_object(
+                    stored_membership = self.get_or_add_object(
                         {
                             "member": single_org_membership["member"].id,
                             "organization": org_id,
@@ -172,11 +175,11 @@ class MembershipStorage(Storage):
                         )
                         logger.debug(role)
 
-                        self.add_or_get_object(
+                        self.get_or_add_object(
                             {
                                 "member": single_org_membership["member"].id,
                                 "organization": on_behalf_of,
-                                "role": role,
+                                "role": role if role else "member",
                                 "start_time": start_time,
                                 "mandate": self.storage.mandate_id,
                                 "on_behalf_of": None,
@@ -184,7 +187,7 @@ class MembershipStorage(Storage):
                         )
                 elif single_org_membership["type"] == "commitee":
                     if not str(org_id) == str(self.storage.main_org_id):
-                        self.add_or_get_object(
+                        self.get_or_add_object(
                             {
                                 "member": single_org_membership["member"].id,
                                 "organization": org_id,
@@ -197,11 +200,11 @@ class MembershipStorage(Storage):
 
                     role = single_org_membership.get("role", "member")
                     if on_behalf_of:
-                        self.add_or_get_object(
+                        self.get_or_add_object(
                             {
                                 "member": single_org_membership["member"].id,
                                 "organization": org_id,
-                                "role": role,
+                                "role": role if role else "member",
                                 "start_time": start_time,
                                 "mandate": self.storage.mandate_id,
                                 "on_behalf_of": on_behalf_of,
@@ -217,28 +220,25 @@ class MembershipStorage(Storage):
                 if voter_membership.id not in keep_memebrship_ids:
                     # end voter membership because it is not parsed from the sabor page
                     logger.debug(
-                        f"membership {voter_membership.id} of person with id {voter_membership.person_id} has to be end, role: {voter_membership.role}"
+                        f"membership {voter_membership.id} of person with id {voter_membership.member} has to be end, role: {voter_membership.role}"
                     )
                     memberships_to_end.append(voter_membership)
-                    if (
-                        self.count_active_voter_membership(voter_membership.person_id)
-                        > 1
-                    ):
+                    if self.count_active_voter_membership(voter_membership.member) > 1:
                         # end just previous club membership
                         logger.debug("end just previous club membership")
                         memberships_to_end.append(voter_membership)
                         for mm in self.get_all_active_persons_memberships(
-                            voter_membership.person_id
+                            voter_membership.member
                         ):
                             if (
-                                mm.organization_id == voter_membership.on_behalf_of_id
+                                mm.organization == voter_membership.on_behalf_of
                             ) and mm.end_time == None:
                                 memberships_to_end.append(mm)
                                 logger.debug("end single membership")
                     else:
                         # end all person memberships
                         for mm in self.get_all_active_persons_memberships(
-                            voter_membership.person_id
+                            voter_membership.member
                         ):
                             memberships_to_end.append(mm)
                             logger.debug("end all membership")
@@ -262,7 +262,7 @@ class MembershipStorage(Storage):
         count = 0
         for membership in person.memberships:
             if (
-                membership.organization_id == int(self.storage.main_org_id)
+                membership.organization == int(self.storage.main_org_id)
                 and not membership.end_time
                 and membership.role == "voter"
             ):
@@ -288,3 +288,14 @@ class MembershipStorage(Storage):
                     role = person_role["role"]
                     return org_id
         return None
+
+    # def count_active_voter_membership(self) -> int:
+    #     count = 0
+    #     for membership in self.memberships:
+    #         if (
+    #             membership.organization_id == int(self.storage.main_org_id)
+    #             and not membership.end_time
+    #             and membership.role == "voter"
+    #         ):
+    #             count += 1
+    #     return count

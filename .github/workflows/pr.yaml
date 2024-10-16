@@ -1,0 +1,17 @@
+on:
+  push:
+    branches:
+    - dev
+
+jobs:
+  pull-requests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: pull-request-main
+      uses: repo-sync/pull-request@v2
+      with:
+        destination_branch: "main"
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        pr_title: "Pulling ${{ github.ref }} into k8s"

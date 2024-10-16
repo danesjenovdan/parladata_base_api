@@ -1,8 +1,8 @@
-from parladata_base_api.storages.utils import Storage, ParladataObject
-from parladata_base_api.storages.vote_storage import VoteStorage
-from parladata_base_api.storages.agenda_item_storage import AgendaItemStorage
-
 import logging
+
+from parladata_base_api.storages.agenda_item_storage import AgendaItemStorage
+from parladata_base_api.storages.utils import ParladataObject, Storage
+from parladata_base_api.storages.vote_storage import VoteStorage
 
 logger = logging.getLogger("logger")
 
@@ -66,6 +66,9 @@ class Session(ParladataObject):
         self.parladata_api.sessions.patch(self.id, {"end_time": timestamp.isoformat()})
         self.end_time = timestamp.isoformat()
 
+    def patch_session(self, data) -> None:
+        self.parladata_api.sessions.patch(self.id, data)
+
 
 class SessionStorage(Storage):
     def __init__(self, core_storage) -> None:
@@ -101,7 +104,7 @@ class SessionStorage(Storage):
             self.sessions_in_review.append(temp_session)
         return temp_session
 
-    def add_or_get_object(self, data: dict) -> Session:
+    def get_or_add_object(self, data: dict) -> Session:
         if not self.sessions:
             self.load_data()
         key = Session.get_key_from_dict(data)
@@ -111,6 +114,12 @@ class SessionStorage(Storage):
             data.update(mandate=self.storage.mandate_id)
             session = self.parladata_api.sessions.set(data)
             return self.store_object(session, is_new=True)
+
+    def get_object_or_none(self, data: dict) -> Session:
+        if not self.sessions:
+            self.load_data()
+        key = Session.get_key_from_dict(data)
+        return self.sessions.get(key, None)
 
     def patch_session(self, session: Session, data: dict) -> None:
         self.parladata_api.sessions.set(session.id, data)

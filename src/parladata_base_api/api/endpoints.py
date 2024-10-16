@@ -1,6 +1,6 @@
 import requests
-
 from requests.auth import HTTPBasicAuth
+
 from .api import Api
 
 
@@ -38,14 +38,14 @@ class SessionsApi(Api):
             return 0
 
     def unvalidate_speeches(self, session_id) -> dict:
-        return self._set_object(f"sessions/{session_id}/unvalidate_speeches", {})
+        return self._set_object({}, custom_endpoint="unvalidate_speeches")
 
 
 class VotesApi(Api):
     endpoint = "votes"
 
     def delete_vote_ballots(self, vote_id) -> dict:
-        return self._delete_object(f"votes/{vote_id}/delete_ballots")
+        return self._delete_object(vote_id, custom_endpoint=f"delete_ballots")
 
 
 class MotionsApi(Api):
