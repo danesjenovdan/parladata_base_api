@@ -1,4 +1,4 @@
-from parladata_base_api.storages.utils import Storage, ParladataObject
+from parladata_base_api.storages.utils import ParladataObject, Storage
 
 
 class AgendaItem(ParladataObject):
@@ -43,11 +43,9 @@ class AgendaItemStorage(Storage):
             self.load_data()
 
         key = AgendaItem.get_key_from_dict(data)
-        added = False
         if key in self.agenda_items.keys():
             agenda_item = self.agenda_items[key]
         else:
             added_agenda_item = self.parladata_api.agenda_items.set(data)
             agenda_item = self.store_object(added_agenda_item, is_new=True)
-            added = True
-        return agenda_item, added
+        return agenda_item

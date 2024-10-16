@@ -1,4 +1,4 @@
-from parladata_base_api.storages.utils import Storage, ParladataObject
+from parladata_base_api.storages.utils import ParladataObject, Storage
 
 
 class Motion(ParladataObject):
@@ -68,11 +68,15 @@ class VoteStorage(Storage):
         self.session = session
 
     def load_data(self) -> None:
+        votes_by_motion_id = {
+            vote["motion"]: vote
+            for vote in self.parladata_api.votes.get_all(
+                motion__session=self.session.id
+            )
+        }
         for motion in self.parladata_api.motions.get_all(session=self.session.id):
             temp_motion = self.store_motion(motion, False)
-
-            vote_id = motion["vote"][0]
-            vote = self.parladata_api.votes.get(vote_id)
+            vote = votes_by_motion_id[temp_motion.id]
             self.store_vote(vote, temp_motion, False)
 
     def store_motion(self, data: dict, is_new: bool) -> Motion:
@@ -95,7 +99,7 @@ class VoteStorage(Storage):
             name=data["name"],
             id=data["id"],
             timestamp=data["timestamp"],
-            has_anonymous_ballots=vote["has_anonymous_ballots"],
+            has_anonymous_ballots=data["has_anonymous_ballots"],
             is_new=is_new,
             core_storage=self.storage,
             parladata_api=self.parladata_api,
@@ -114,7 +118,7 @@ class VoteStorage(Storage):
         added_vote = self.parladata_api.votes.set(data)
         return self.store_vote(added_vote, motion, True)
 
-    def add_or_get_object(self, data: dict) -> Motion:
+    def get_or_add_object(self, data: dict) -> Motion:
         if not self.motions:
             self.load_data()
         if self.check_if_motion_is_parsed(data):

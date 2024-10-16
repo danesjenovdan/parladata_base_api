@@ -1,4 +1,4 @@
-from parladata_base_api.storages.utils import Storage, ParladataObject
+from parladata_base_api.storages.utils import ParladataObject, Storage
 
 
 class Area(ParladataObject):

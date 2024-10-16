@@ -1,13 +1,17 @@
-from parladata_base_api.storages.session_storage import SessionStorage
-from parladata_base_api.storages.legislation_storage import LegislationStorage
-from parladata_base_api.storages.people_storage import PeopleStorage
-from parladata_base_api.storages.organization_storage import OrganizationStorage
-from parladata_base_api.storages.question_storage import QuestionStorage
-from parladata_base_api.storages.membership_storage import MembershipStorage
-from parladata_base_api.storages.public_question_storage import PublicQuestionStorage
-from parladata_base_api.api.endpoints import ParladataApi
-
 import logging
+
+from parladata_base_api.api.endpoints import ParladataApi
+from parladata_base_api.storages.area_storage import AreaStorage
+from parladata_base_api.storages.legislation_storage import LegislationStorage
+from parladata_base_api.storages.membership_storage import MembershipStorage
+from parladata_base_api.storages.organization_membership_storage import (
+    OrganizationMembershipStorage,
+)
+from parladata_base_api.storages.organization_storage import OrganizationStorage
+from parladata_base_api.storages.people_storage import PeopleStorage
+from parladata_base_api.storages.public_question_storage import PublicQuestionStorage
+from parladata_base_api.storages.question_storage import QuestionStorage
+from parladata_base_api.storages.session_storage import SessionStorage
 
 
 class DataStorage(object):
@@ -38,3 +42,5 @@ class DataStorage(object):
         self.question_storage = QuestionStorage(self)
         self.public_question_storage = PublicQuestionStorage(self)
         self.membership_storage = MembershipStorage(self)
+        self.area_storage = AreaStorage(self)
+        self.organization_membership_storage = OrganizationMembershipStorage(self)

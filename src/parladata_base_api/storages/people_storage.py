@@ -1,5 +1,6 @@
 import re
-from parladata_base_api.storages.utils import Storage, ParladataObject
+
+from parladata_base_api.storages.utils import ParladataObject, Storage
 
 
 class Person(ParladataObject):
@@ -17,6 +18,10 @@ class Person(ParladataObject):
 
     def save_image(self, image_url: str) -> None:
         self.parladata_api.people.upload_image(self.id, image_url)
+
+    def add_parser_name(self, parser_name: str) -> None:
+        data = self.parladata_api.people.add_person_parser_name(self.id, parser_name)
+        self.parser_names = data["parser_names"]
 
 
 class PeopleStorage(Storage):
@@ -42,23 +47,46 @@ class PeopleStorage(Storage):
         self.people_by_id[person["id"]] = temp_person
         return temp_person
 
-    def get_object_by_parsername(self, name: dict) -> Person:
+    # def get_object_by_parsername(self, name: str) -> Person:
+    #     if not self.people:
+    #         self.load_data()
+    #     try:
+    #         name = name.lower()
+    #     except:
+    #         return None
+    #     for parser_names in self.people.keys():
+    #         for parser_name in parser_names.split("|"):
+    #             if name == parser_name:
+    #                 return self.people[parser_names]
+    #     return None
+
+    # def get_object_by_parsername_compare_rodilnik(self, object_type, name):
+    #     """
+    #     """
+    #     cutted_name = [word[:-2] for word in name.lower().split(' ')]
+    #     for parser_names in self.people.keys():
+    #         for parser_name in parser_names.split('|'):
+    #             cutted_parser_name = [word[:-2] for word in parser_name.lower().split(' ')]
+    #             if len(cutted_parser_name) != len(cutted_name):
+    #                 continue
+    #             result = []
+    #             for i, parted_parser_name in enumerate(cutted_parser_name):
+    #                 result.append( parted_parser_name in cutted_name[i] )
+    #             if result and all(result):
+    #                 return getattr(self, object_type)[parser_names]
+    #     return None
+
+    def get_or_add_object(
+        self, person_data: dict, add: bool = True, name_type: str = "normal"
+    ) -> Person:
         if not self.people:
             self.load_data()
-        try:
-            name = name.lower()
-        except:
-            return None
-        for parser_names in self.people.keys():
-            for parser_name in parser_names.split("|"):
-                if name == parser_name:
-                    return self.people[parser_names]
-        return None
-
-    def get_or_add_object(self, person_data: dict, add: bool = True) -> Person:
         name = person_data["name"]
         prefix, name = self.get_prefix(name)
-        person = self.get_object_by_parsername(name)
+        if name_type == "genitive":
+            person = self.get_object_by_parsername_compare_genitiv("people", name)
+        else:
+            person = self.get_object_by_parsername("people", name)
         if person:
             return person
         elif not add:

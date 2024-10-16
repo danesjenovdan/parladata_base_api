@@ -12,6 +12,33 @@ class Storage(object):
     def load_data(self) -> None:
         raise NotImplementedError
 
+    def get_object_by_parsername(self, object_type: str, name: str) -> object:
+        """ """
+        name = name.lower()
+        for parser_names in getattr(self, object_type).keys():
+            for parser_name in parser_names.split("|"):
+                if name == parser_name:
+                    return getattr(self, object_type)[parser_names]
+        return None
+
+    def get_object_by_parsername_compare_genitiv(
+        self, object_type: str, name: str
+    ) -> object:
+        cutted_name = [word[:-2] for word in name.lower().split(" ")]
+        for parser_names in getattr(self, object_type).keys():
+            for parser_name in parser_names.split("|"):
+                cutted_parser_name = [
+                    word[:-2] for word in parser_name.lower().split(" ")
+                ]
+                if len(cutted_parser_name) != len(cutted_name):
+                    continue
+                result = []
+                for i, parted_parser_name in enumerate(cutted_parser_name):
+                    result.append(parted_parser_name in cutted_name[i])
+                if result and all(result):
+                    return getattr(self, object_type)[parser_names]
+        return None
+
 
 class ParladataObject(object):
     keys = ["gov_id"]
@@ -34,16 +61,15 @@ class ParladataObject(object):
             return "-".join([ctl._parse_value(v) for v in value])
         elif isinstance(value, object):
             return str(value.id) if value else "-"
+        elif isinstance(value, type(None)):
+            return "None"
         else:
             return "-"
 
     def _parse_key(self, key: str, data: any = None) -> str:
-        print(data)
         if isinstance(data, dict):
             value = data[key]
         else:
-            print(self, key)
             value = getattr(self, key)
 
-        print(value)
         return self._parse_value(value)

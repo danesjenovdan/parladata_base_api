@@ -1,5 +1,6 @@
-from parladata_base_api.storages.utils import Storage, ParladataObject
 import logging
+
+from parladata_base_api.storages.utils import ParladataObject, Storage
 
 logger = logging.getLogger("logger")
 
@@ -58,7 +59,7 @@ class LegislationClassification(ParladataObject):
         self.name = name
 
 
-class LegislationConsiceration(ParladataObject):
+class LegislationConsideration(ParladataObject):
     keys = ["legislation", "session"]
 
     def __init__(self, id, law, timestamp, procedure_phase, session, is_new) -> None:
@@ -122,7 +123,7 @@ class LegislationStorage(Storage):
         for (
             legislation_consideration
         ) in self.parladata_api.legislation_consideration.get_all(
-            mandate=self.storage.mandate_id
+            legislation__mandate=self.storage.mandate_id
         ):
             self.store_legislation_consideration(
                 legislation_consideration, is_new=False
@@ -179,12 +180,22 @@ class LegislationStorage(Storage):
                 patched_law = self.parladata_api.legislation.patch(law.id, data)
                 self.store_object(patched_law, is_new=False)
 
+    def set_law_as_in_procedure(self, epa) -> None:
+        in_procedure = self.legislation_statuses["in_procedure"]
+        key = self.get_key_from_epa(epa)
+        if key in self.legislation.keys():
+            law = self.legislation[key]
+            # update status
+            data = {"status": in_procedure.id}
+            patched_law = self.parladata_api.legislation.patch(law.id, data)
+            self.store_object(patched_law, is_new=False)
+
     def store_legislation_consideration(
         self, consideration_dict, is_new
-    ) -> LegislationConsiceration:
+    ) -> LegislationConsideration:
         law = self.legislation_by_id[consideration_dict["legislation"]]
         phase = self.procedure_phases_by_id[consideration_dict["procedure_phase"]]
-        consideration = LegislationConsiceration(
+        consideration = LegislationConsideration(
             id=consideration_dict["id"],
             law=law,
             timestamp=consideration_dict["timestamp"],
@@ -206,11 +217,13 @@ class LegislationStorage(Storage):
             self.load_data()
         return self.legislation.get(epa, None)
 
-    def set_legislation_consideration(self, data) -> LegislationConsiceration:
+    def set_legislation_consideration(self, data) -> LegislationConsideration:
         legislation_consideration = self.parladata_api.legislation_consideration.set(
             data
         )
-        self.store_legislation_consideration(legislation_consideration, is_new=True)
+        legislation_consideration = self.store_legislation_consideration(
+            legislation_consideration, is_new=True
+        )
         return legislation_consideration
 
     def patch_law(self, law, data) -> Law:
@@ -233,6 +246,23 @@ class LegislationStorage(Storage):
             self.load_data()
         return epa in self.legislation.keys()
 
+    def get_law_by_epa(self, epa) -> Law:
+        if not self.legislation_statuses:
+            self.load_data()
+        key = self.get_key_from_epa(epa)
+        return self.legislation.get(key, None)
+
+    def get_or_add_object(self, law_data) -> object:
+        if not self.legislation_statuses:
+            self.load_data()
+        key = Law.get_key_from_dict(law_data)
+
+        if key in self.legislation.keys():
+            return self.legislation[key]
+        else:
+            law = self.set_law(law_data)
+        return law
+
     def update_or_add_law(self, law_data) -> Law:
         if not self.legislation_statuses:
             self.load_data()
@@ -253,8 +283,8 @@ class LegislationStorage(Storage):
 
     def prepare_and_set_legislation_consideration(
         self, legislation_consideration
-    ) -> LegislationConsiceration:
-        legislation_consideration_key = LegislationConsiceration.get_key_from_dict(
+    ) -> LegislationConsideration:
+        legislation_consideration_key = LegislationConsideration.get_key_from_dict(
             legislation_consideration
         )
         if not legislation_consideration_key in self.legislation_considerations.keys():
@@ -266,3 +296,20 @@ class LegislationStorage(Storage):
                 legislation_consideration_key
             ]
         return legislation_consideration
+
+    def get_procedure_phase(self, procedure_phase: dict) -> ProcedurePhase:
+        key = ProcedurePhase.get_key_from_dict(procedure_phase)
+        if not self.procedure_phases:
+            self.load_data()
+        return self.procedure_phases.get(key, None)
+
+    def get_legislation_classifications_by_name(self, name) -> int:
+        if not self.legislation_statuses:
+            self.load_data()
+        key = LegislationClassification.get_key_from_dict({"name": name})
+        try:
+            legislation_classifications = self.legislation_classifications.get(key)
+        except:
+            print(f"name is not in loaded legislation classifications")
+            return
+        return legislation_classifications.id

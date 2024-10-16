@@ -1,13 +1,16 @@
-from parladata_base_api.storages.utils import Storage, ParladataObject
+from parladata_base_api.storages.utils import ParladataObject, Storage
 
 
 class Organization(ParladataObject):
     keys = ["parser_names"]
 
-    def __init__(self, name: str, id: int, parser_names: str, is_new: bool) -> None:
+    def __init__(
+        self, name: str, id: int, parser_names: str, is_new: bool, gov_id: str = None
+    ) -> None:
         self.id = id
         self.name = name
         self.parser_names = parser_names
+        self.gov_id = gov_id
         self.is_new = is_new
         self.memberships = []
 
@@ -17,6 +20,7 @@ class OrganizationStorage(Storage):
         super().__init__(core_storage)
         self.organizations = {}
         self.organizations_by_id = {}
+        self.organizations_by_gov_id = {}
 
     def load_data(self) -> None:
         for organization in self.parladata_api.organizations.get_all():
@@ -30,28 +34,35 @@ class OrganizationStorage(Storage):
             parser_names=organization["parser_names"],
             id=organization["id"],
             is_new=is_new,
+            gov_id=organization.get("gov_id", None),
         )
         self.organizations[temp_organization.get_key()] = temp_organization
         self.organizations_by_id[organization["id"]] = temp_organization
+        if temp_organization.gov_id:
+            self.organizations_by_gov_id[temp_organization.gov_id] = temp_organization
         return temp_organization
 
-    def get_object_by_parsername(self, name: str) -> Organization:
-        if not self.organizations:
-            self.load_data()
-        try:
-            name = name.lower()
-        except:
-            return None
-        for parser_names in self.organizations.keys():
-            for parser_name in parser_names.split("|"):
-                if name == parser_name:
-                    return self.organizations[parser_names]
-        return None
+    # def get_object_by_parsername(self, name: str) -> Organization:
+    #     if not self.organizations:
+    #         self.load_data()
+    #     try:
+    #         name = name.lower()
+    #     except:
+    #         return None
+    #     for parser_names in self.organizations.keys():
+    #         for parser_name in parser_names.split("|"):
+    #             if name == parser_name:
+    #                 return self.organizations[parser_names]
+    #     return None
 
     def get_or_add_object(
         self, organization_data: dict, add: bool = True
     ) -> Organization:
-        organization = self.get_object_by_parsername(organization_data["name"])
+        if not self.organizations:
+            self.load_data()
+        organization = self.get_object_by_parsername(
+            "organizations", organization_data["name"]
+        )
         if organization:
             return organization
         elif not add:
@@ -63,3 +74,8 @@ class OrganizationStorage(Storage):
         if not self.organizations:
             self.load_data()
         return self.organizations_by_id.get(id, None)
+
+    def get_organization_by_gov_id(self, gov_id):
+        if not self.organizations:
+            self.load_data()
+        return self.organizations_by_gov_id.get(gov_id, None)

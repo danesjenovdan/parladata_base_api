@@ -1,6 +1,6 @@
 import logging
 
-from parladata_base_api.storages.utils import Storage, ParladataObject
+from parladata_base_api.storages.utils import ParladataObject, Storage
 
 logger = logging.getLogger("logger")
 
@@ -60,7 +60,7 @@ class PublicQuestionStorage(Storage):
             id=public_answer["id"],
             is_new=is_new,
         )
-        self.public_questions[temp_answer.get_key()] = temp_answer
+        self.public_answers[temp_answer.get_key()] = temp_answer
         return temp_answer
 
     def set_public_question(self, data: dict) -> PublicQuestion:
