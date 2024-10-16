@@ -14,4 +14,4 @@ jobs:
       with:
         destination_branch: "main"
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        pr_title: "Pulling ${{ github.ref }} into k8s"
+        pr_title: "Pulling ${{ github.ref }} into main"
