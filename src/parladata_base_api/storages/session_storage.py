@@ -42,6 +42,9 @@ class Session(ParladataObject):
         self.vote_storage = VoteStorage(self.storage, self)
         self.agenda_items_storage = AgendaItemStorage(self.storage, self)
 
+    def __str__(self):
+        return f"{self.name} [{self.id}]"
+
     def get_speech_count(self) -> int:
         if self.count == None:
             self.count = self.parladata_api.sessions.get_speech_count(self.id)

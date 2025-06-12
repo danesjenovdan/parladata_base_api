@@ -5,14 +5,25 @@ class Organization(ParladataObject):
     keys = ["parser_names"]
 
     def __init__(
-        self, name: str, id: int, parser_names: str, is_new: bool, gov_id: str = None
+        self,
+        name: str,
+        id: int,
+        parser_names: str,
+        is_new: bool,
+        gov_id: str = None,
+        classification: str = None,
     ) -> None:
         self.id = id
         self.name = name
         self.parser_names = parser_names
         self.gov_id = gov_id
+        self.classification = classification
         self.is_new = is_new
         self.memberships = []
+        self.active_memberships_by_member_id = {}
+
+    def __repr__(self):
+        return f"<Organization: {self.name} [{self.id}]>"
 
 
 class OrganizationStorage(Storage):
@@ -21,6 +32,7 @@ class OrganizationStorage(Storage):
         self.organizations = {}
         self.organizations_by_id = {}
         self.organizations_by_gov_id = {}
+        self.active_memberships_by_member_id = {}
 
     def load_data(self) -> None:
         for organization in self.parladata_api.organizations.get_all():
@@ -35,6 +47,7 @@ class OrganizationStorage(Storage):
             id=organization["id"],
             is_new=is_new,
             gov_id=organization.get("gov_id", None),
+            classification=organization.get("classification", None),
         )
         self.organizations[temp_organization.get_key()] = temp_organization
         self.organizations_by_id[organization["id"]] = temp_organization

@@ -13,7 +13,7 @@ class Person(ParladataObject):
         self.name = name
         self.parser_names = parser_names
         self.is_new = is_new
-        self.memberships = []
+        self.active_memberships = []
         self.parladata_api = parladata_api
 
     def save_image(self, image_url: str) -> None:
@@ -22,6 +22,9 @@ class Person(ParladataObject):
     def add_parser_name(self, parser_name: str) -> None:
         data = self.parladata_api.people.add_person_parser_name(self.id, parser_name)
         self.parser_names = data["parser_names"]
+
+    def __repr__(self):
+        return f"<Person {self.name} [{self.id}]>"
 
 
 class PeopleStorage(Storage):

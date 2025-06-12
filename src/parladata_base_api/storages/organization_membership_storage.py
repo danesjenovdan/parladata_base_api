@@ -66,7 +66,7 @@ class OrganizationMembershipStorage(Storage):
 
     def load_data(self) -> None:
         if not self.memberships:
-            for membership in self.parladata_api.organization_memberships.get_all(
+            for membership in self.parladata_api.organizations_memberships.get_all(
                 mandate=self.storage.mandate_id
             ):
                 self.store_object(membership, is_new=False)
