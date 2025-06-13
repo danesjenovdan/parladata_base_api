@@ -84,7 +84,7 @@ class MembershipStorage(Storage):
             membership.get("end_time", None) == None
             or membership["end_time"] > datetime.now().isoformat()
         ) and membership["role"] == "voter":
-            self.active_voters[membership["organization"]][membership["member"]][
+            self.active_voters[membership["member"]][membership["organization"]][
                 membership["on_behalf_of"]
             ].append(temp_membership)
 
@@ -152,7 +152,7 @@ class MembershipStorage(Storage):
                 self.membership_proccessing(party_membership, is_party_membership=True)
 
             for membership in person_memberships.get("commitee", []):
-                self.membership_proccessing(party_membership, is_party_membership=True)
+                self.membership_proccessing(membership, is_party_membership=False)
 
                 # membership["on_behalf_of"] = party["organization"]
                 # self.membership_storage.temporary_data[
@@ -247,112 +247,6 @@ class MembershipStorage(Storage):
             if stored_membership.is_new:
                 self.fix_user_membership(member, organization.id, on_behalf_of)
 
-    def refresh_memberships(self) -> None:
-        """ """
-        self.keep_memebrship_ids = []
-        memberships_to_end = []
-
-        for org_id, org_data in self.temporary_data.items():
-            for single_org_membership in org_data:
-                # check if membership is already parsed
-                if membership := self.get_id_if_membership_is_parsed(
-                    single_org_membership
-                ):
-                    self.keep_memebrship_ids.append(membership.id)
-                    continue
-                # get start&end time for the membership
-                if start_time := single_org_membership.get("start_time"):
-                    pass
-                else:
-                    start_time = self.default_start_time
-
-                if end_time := single_org_membership.get("end_time"):
-                    pass
-                else:
-                    end_time = (
-                        datetime.fromisoformat(self.default_start_time)
-                        - timedelta(seconds=1)
-                    ).isoformat()
-
-                self.end_time = end_time
-
-                need_to_add_voter_membership = single_org_membership["is_voter"]
-
-                logger.debug(single_org_membership)
-                # get organization id
-                if single_org_membership["organization"]:
-                    organization = single_org_membership["organization"]
-                else:
-                    organization = None
-
-                member = single_org_membership["member"]
-                role = single_org_membership.get("role", "member")
-                if self.temporary_roles:
-                    # override role if it's parserd from separate page and stored
-                    # in temporary_roles
-                    role = self.get_members_role_in_organization(
-                        member.id, organization.id
-                    )
-                logger.debug(role)
-
-                # check if user changed party role
-                if organization and org_id == self.storage.main_org_id:
-                    existing_party_membrships = self.get_membership_in_organiaztion(
-                        member, organization.id
-                    )
-                    if existing_party_membrships:
-                        if existing_party_membrships.role != role:
-                            # if user changed party role
-                            existing_party_membrships.set_end_time(self.end_time)
-                            need_to_add_voter_membership = False
-
-                if not organization:
-                    # if membership is None then not add party membership
-                    party_id = None
-
-                elif organization and org_id == self.storage.main_org_id:
-                    # if current memberships if in main organization then add membership
-                    # to party
-                    party_id = organization.id
-                else:
-                    # membership represent committee like membership
-                    party = single_org_membership.get("on_behalf_of", None)
-                    if party:
-                        party_id = party.id
-                    else:
-                        party_id = None
-                    org_id = organization.id
-
-                if party_id:
-                    stored_membership = self.get_or_add_object(
-                        {
-                            "member": member.id,
-                            "organization": party_id,
-                            "role": role,
-                            "start_time": start_time,
-                            "mandate": self.storage.mandate_id,
-                            "on_behalf_of": None,
-                        }
-                    )
-                    self.keep_memebrship_ids.append(stored_membership.id)
-
-                if need_to_add_voter_membership:
-                    stored_membership = self.get_or_add_object(
-                        {
-                            "member": member.id,
-                            "organization": org_id,
-                            "role": "voter",
-                            "start_time": start_time,
-                            "mandate": self.storage.mandate_id,
-                            "on_behalf_of": party_id,
-                        }
-                    )
-                    self.keep_memebrship_ids.append(stored_membership.id)
-                    if stored_membership.is_new:
-                        self.fix_user_membership(member, org_id, organization)
-
-        logger.debug(f"changed mambership {memberships_to_end}")
-
     # def end_old_memberships_after_parsing(self) -> None:
     #     for org_id, voters in self.active_voters.items():
     #         for person_id, memberships in voters.items():
@@ -369,8 +263,8 @@ class MembershipStorage(Storage):
         :param on_behalf_of: Organization object
         """
         print("FIX USER MEMBERSHIP", person, organization_id, on_behalf_of)
-        voter_org = self.active_voters.get(organization_id)
-        person_voter_org_dict = voter_org.get(person.id, None)
+        all_person_voter_orgs_dict = self.active_voters.get(person.id)
+        person_voter_org_dict = all_person_voter_orgs_dict.get(organization_id, None)
         if person_voter_org_dict is None:
             # Person has no voter membership. Maybe it's a new person
             return
