@@ -38,7 +38,7 @@ class SessionsApi(Api):
             return 0
 
     def unvalidate_speeches(self, session_id) -> dict:
-        return self._set_object({}, custom_endpoint="unvalidate_speeches")
+        return self._set_object({}, custom_endpoint=f"{session_id}/unvalidate_speeches")
 
 
 class VotesApi(Api):
