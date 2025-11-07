@@ -7,7 +7,7 @@ packages = ["src/parladata_base_api"]
 
 [project]
 name = "parladata-base-api"
-version = "0.3.2b1"
+version = "0.3.2b2"
 authors = [
   { name="Danes je nov dan", email="tech@danesjenovdan.si" },
 ]

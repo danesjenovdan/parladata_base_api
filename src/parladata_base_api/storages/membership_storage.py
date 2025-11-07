@@ -134,10 +134,11 @@ class MembershipStorage(Storage):
             return self.memberships[key][0]
         return None
 
-    def get_membership_in_organization(self, person, organization_id) -> Membership:
+    def get_membership_in_organization(self, person, organization_id) -> Membership | None:
         for membership in person.active_memberships:
             if membership.organization.id == organization_id:
                 return membership
+        return None
 
     def refresh_per_person_memberships(self) -> None:
         """ """
@@ -212,10 +213,13 @@ class MembershipStorage(Storage):
                     existing_party_memberships.set_end_time(self.end_time)
                     need_to_add_voter_membership = False
 
+        # Create party membership if on_behalf_of exists
         if on_behalf_of:
             if is_party_membership:
+                # This is a party membership - create membership in the party
                 org_id = on_behalf_of.id
             else:
+                # This is a committee membership - create membership in the committee
                 org_id = organization.id
             stored_membership = self.get_or_add_object(
                 {
@@ -228,10 +232,9 @@ class MembershipStorage(Storage):
                 }
             )
             self.keep_membership_ids.append(stored_membership.id)
-        else:
-            if is_party_membership:
-                org_id = self.storage.main_org_id
+        # Note: If on_behalf_of is None (independent member), no party membership is created
 
+        # Create voter membership if needed
         if need_to_add_voter_membership:
             stored_membership = self.get_or_add_object(
                 {
@@ -251,23 +254,53 @@ class MembershipStorage(Storage):
         """
         End memberships that are no longer valid after parsing new data.
         This method should be called after refresh_per_person_memberships.
+        
+        Checks for active voter memberships that weren't parsed (not in keep_membership_ids)
+        and removes both the voter membership and associated party membership.
+        
+        Works for all organizations (main org, working bodies, etc.) and handles 
+        independent members (on_behalf_of=None) correctly.
         """
+        memberships_to_end = []
+        
+        # Find all voter memberships that weren't parsed
         for person_id, orgs in self.active_voters.items():
             for org_id, on_behalf_orgs in orgs.items():
                 for on_behalf_id, memberships in on_behalf_orgs.items():
                     for membership in memberships:
-                        if membership.id not in self.keep_membership_ids:
-                            membership.set_end_time(self.end_time)
-                            if membership.member and hasattr(
-                                membership.member, "active_memberships"
-                            ):
-                                try:
-                                    membership.member.active_memberships.remove(
-                                        membership
-                                    )
-                                except ValueError:
-                                    # Membership already removed
-                                    pass
+                        if membership.id not in self.keep_membership_ids and membership.role == "voter":
+                            logger.debug(f"Found unparsed voter membership: person={person_id}, org={org_id}, on_behalf_of={on_behalf_id}")
+                            memberships_to_end.append(membership)
+        
+        # End the voter memberships and their associated party memberships
+        for voter_membership in memberships_to_end:
+            logger.debug(f"Ending voter membership {voter_membership.id} for person {voter_membership.member.id}")
+            
+            # End the voter membership
+            voter_membership.set_end_time(self.end_time)
+            
+            # Remove from person's active memberships
+            if voter_membership.member and hasattr(voter_membership.member, "active_memberships"):
+                try:
+                    voter_membership.member.active_memberships.remove(voter_membership)
+                except ValueError:
+                    pass  # Already removed
+            
+            # Find and end associated party membership (only if on_behalf_of exists)
+            if voter_membership.on_behalf_of:
+                party_membership = self.get_membership_in_organization(
+                    voter_membership.member, voter_membership.on_behalf_of.id
+                )
+                if party_membership and party_membership.role in ["member", "president", "deputy"]:
+                    logger.debug(f"Ending party membership {party_membership.id} for person {voter_membership.member.id}")
+                    party_membership.set_end_time(self.end_time)
+                    if hasattr(voter_membership.member, "active_memberships"):
+                        try:
+                            voter_membership.member.active_memberships.remove(party_membership)
+                        except ValueError:
+                            pass  # Already removed
+            else:
+                logger.debug(f"Independent member {voter_membership.member.id} - no party membership to end")
 
     def fix_user_membership(self, person, organization_id, on_behalf_of) -> None:
         """
@@ -287,19 +320,27 @@ class MembershipStorage(Storage):
         if person_voter_org_dict and len(person_voter_org_dict) > 1:
             # person has change a club
             for org_id, org_memberships in person_voter_org_dict.items():
-                if org_id != on_behalf_of:
+                if org_id != (on_behalf_of.id if on_behalf_of else None):
                     for m in org_memberships:
                         m.set_end_time(self.end_time)
-                        m.member.active_memberships.remove(m)
+                        try:
+                            m.member.active_memberships.remove(m)
+                        except ValueError:
+                            pass  # Already removed
                         if organization_id == self.storage.main_org_id:
-                            for pm in m.member.active_memberships:
+                            # Create a copy to avoid modification during iteration
+                            active_memberships_copy = m.member.active_memberships.copy()
+                            for pm in active_memberships_copy:
                                 if pm.organization == m.on_behalf_of and pm.role in [
                                     "member",
                                     "president",
                                     "deputy",
                                 ]:
                                     pm.set_end_time(self.end_time)
-                                    pm.member.active_memberships.remove(pm)
+                                    try:
+                                        pm.member.active_memberships.remove(pm)
+                                    except ValueError:
+                                        pass  # Already removed
 
     def get_all_active_persons_memberships(self, person_id) -> list:
         return [
