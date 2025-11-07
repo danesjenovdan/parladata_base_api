@@ -34,7 +34,7 @@ class Membership(ParladataObject):
         self.is_new = is_new
         self.parladata_api = parladata_api
 
-    def set_end_time(self, end_time) -> dict:
+    def set_end_time(self, end_time) -> None:
         self.end_time = end_time
         self.parladata_api.person_memberships.patch(self.id, {"end_time": end_time})
 
@@ -100,7 +100,7 @@ class MembershipStorage(Storage):
                 mandate=self.storage.mandate_id
             ):
                 self.store_object(membership, is_new=False)
-            logger.debug(f"laoded was {len(self.memberships)} memberships")
+            logger.debug(f"loaded was {len(self.memberships)} memberships")
 
         if not self.memberships:
             self.first_load = True
@@ -128,20 +128,20 @@ class MembershipStorage(Storage):
         new_membership = self.store_object(added_membership, is_new=True)
         return new_membership
 
-    def get_id_if_membership_is_parsed(self, membership) -> bool:
+    def get_id_if_membership_is_parsed(self, membership) -> Membership | None:
         key = Membership.get_key_from_dict(membership)
         if key in self.memberships.keys():
             return self.memberships[key][0]
         return None
 
-    def get_membership_in_organiaztion(self, person, organization_id) -> Membership:
+    def get_membership_in_organization(self, person, organization_id) -> Membership:
         for membership in person.active_memberships:
             if membership.organization.id == organization_id:
                 return membership
 
     def refresh_per_person_memberships(self) -> None:
         """ """
-        self.keep_memebrship_ids = []
+        self.keep_membership_ids = []
         memberships_to_end = []
 
         for person_memberships in self.temporary_data.values():
@@ -149,23 +149,23 @@ class MembershipStorage(Storage):
             party_membership = person_memberships.get("party", None)
             if party_membership:
                 party_membership = party_membership[0]
-                self.membership_proccessing(party_membership, is_party_membership=True)
+                self.membership_processing(party_membership, is_party_membership=True)
 
-            for membership in person_memberships.get("commitee", []):
-                self.membership_proccessing(membership, is_party_membership=False)
+            for membership in person_memberships.get("committee", []):
+                self.membership_processing(membership, is_party_membership=False)
 
                 # membership["on_behalf_of"] = party["organization"]
                 # self.membership_storage.temporary_data[
                 #     membership["organization"].id
                 # ].append(membership)
 
-    def membership_proccessing(
+    def membership_processing(
         self,
         single_org_membership,
         is_party_membership: bool = False,
     ) -> None:
         if membership := self.get_id_if_membership_is_parsed(single_org_membership):
-            self.keep_memebrship_ids.append(membership.id)
+            self.keep_membership_ids.append(membership.id)
             return
         # get start&end time for the membership
         if start_time := single_org_membership.get("start_time"):
@@ -203,13 +203,13 @@ class MembershipStorage(Storage):
             and on_behalf_of
             and organization.id == self.storage.main_org_id
         ):
-            existing_party_membrships = self.get_membership_in_organiaztion(
+            existing_party_memberships = self.get_membership_in_organization(
                 member, on_behalf_of.id
             )
-            if existing_party_membrships:
-                if existing_party_membrships.role != role:
+            if existing_party_memberships:
+                if existing_party_memberships.role != role:
                     # if user changed party role
-                    existing_party_membrships.set_end_time(self.end_time)
+                    existing_party_memberships.set_end_time(self.end_time)
                     need_to_add_voter_membership = False
 
         if on_behalf_of:
@@ -227,7 +227,7 @@ class MembershipStorage(Storage):
                     "on_behalf_of": None,
                 }
             )
-            self.keep_memebrship_ids.append(stored_membership.id)
+            self.keep_membership_ids.append(stored_membership.id)
         else:
             if is_party_membership:
                 org_id = self.storage.main_org_id
@@ -243,15 +243,31 @@ class MembershipStorage(Storage):
                     "on_behalf_of": on_behalf_of.id if on_behalf_of else None,
                 }
             )
-            self.keep_memebrship_ids.append(stored_membership.id)
+            self.keep_membership_ids.append(stored_membership.id)
             if stored_membership.is_new:
                 self.fix_user_membership(member, organization.id, on_behalf_of)
 
-    # def end_old_memberships_after_parsing(self) -> None:
-    #     for org_id, voters in self.active_voters.items():
-    #         for person_id, memberships in voters.items():
-    #             for membership in memberships:
-    #                 if membership.id not in self.keep_memebrship_ids:
+    def end_old_memberships_after_parsing(self) -> None:
+        """
+        End memberships that are no longer valid after parsing new data.
+        This method should be called after refresh_per_person_memberships.
+        """
+        for person_id, orgs in self.active_voters.items():
+            for org_id, on_behalf_orgs in orgs.items():
+                for on_behalf_id, memberships in on_behalf_orgs.items():
+                    for membership in memberships:
+                        if membership.id not in self.keep_membership_ids:
+                            membership.set_end_time(self.end_time)
+                            if membership.member and hasattr(
+                                membership.member, "active_memberships"
+                            ):
+                                try:
+                                    membership.member.active_memberships.remove(
+                                        membership
+                                    )
+                                except ValueError:
+                                    # Membership already removed
+                                    pass
 
     def fix_user_membership(self, person, organization_id, on_behalf_of) -> None:
         """
