@@ -111,8 +111,9 @@ class SessionStorage(Storage):
         if not self.sessions:
             self.load_data()
         key = Session.get_key_from_dict(data)
-        if key in self.sessions.keys():
-            return self.sessions[key]
+        session = self.get_object_by_parsername("sessions", key)
+        if session:
+            return session
         else:
             data.update(mandate=self.storage.mandate_id)
             session = self.parladata_api.sessions.set(data)

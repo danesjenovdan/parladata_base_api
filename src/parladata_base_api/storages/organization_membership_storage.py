@@ -32,7 +32,7 @@ class OrganizationMembership(ParladataObject):
 
     def set_end_time(self, end_time) -> dict:
         self.end_time = end_time
-        self.parladata_api.organization_memberships.patch(
+        self.parladata_api.organizations_memberships.patch(
             self.id, {"end_time": end_time}
         )
 
@@ -70,7 +70,7 @@ class OrganizationMembershipStorage(Storage):
                 mandate=self.storage.mandate_id
             ):
                 self.store_object(membership, is_new=False)
-            logger.debug(f"laoded was {len(self.memberships)} memberships")
+            logger.debug(f"loaded was {len(self.memberships)} memberships")
 
         if not self.memberships:
             self.first_load = True
@@ -89,7 +89,7 @@ class OrganizationMembershipStorage(Storage):
         return membership
 
     def set_membership(self, data) -> OrganizationMembership:
-        added_membership = self.parladata_api.organization_memberships.set(data)
+        added_membership = self.parladata_api.organizations_memberships.set(data)
         new_membership = self.store_object(added_membership, is_new=True)
         return new_membership
 
