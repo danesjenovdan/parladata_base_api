@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -30,7 +32,8 @@ class SessionsApi(Api):
     endpoint = "sessions"
 
     def get_speech_count(self, id) -> int:
-        url = f"{self.base_url}/speeches/count/?session={id}"
+        date_str = datetime.now().date().strftime("%Y-%m-%d")
+        url = f"{self.base_url}/speeches/count/?session={id}&valid_on={date_str}"
         data = requests.get(url).json()
         if "count" in data.keys():
             return data["count"]
