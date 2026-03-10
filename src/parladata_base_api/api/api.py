@@ -1,6 +1,8 @@
 import logging
 
 from requests.auth import HTTPBasicAuth
+from requests.exceptions import RequestException
+from tenacity import retry, stop_after_attempt, wait_exponential
 
 logger = logging.getLogger("logger")
 
@@ -11,18 +13,26 @@ class Api(object):
         self.base_url = base_url
         endpoint = "base"
 
+    @retry(
+        stop=stop_after_attempt(5), wait=wait_exponential(multiplier=10, min=5, max=60)
+    )
+    def _make_request(self, method, url, **kwargs):
+        """Naredi HTTP zahtevo s retry logiko (GET, POST, PATCH, DELETE)."""
+        func = getattr(self.session, method)
+        response = func(url, timeout=10, **kwargs)
+        if response.status_code > 299:
+            raise RequestException(
+                f"API napaka {response.status_code}: {response.content}"
+            )
+        return response
+
     def _get_data_from_pager_api_gen(self, url, limit=300):
-        end = False
-        page = 1
         if "?" in url:
             url = url + f"&limit={limit}"
         else:
             url = url + f"?limit={limit}"
         while url:
-            response = self.session.get(url)
-            if response.status_code != 200:
-                logger.warning(response.content)
-                logger.warning(url)
+            response = self._make_request("get", url)
             data = response.json()
             yield data["results"]
             url = data["next"]
@@ -47,20 +57,14 @@ class Api(object):
         url = f"{self.base_url}/{self.endpoint}/{object_id}/" + (
             f"{custom_endpoint}/" if custom_endpoint else ""
         )
-        response = self.session.get(url)
-        if response.status_code > 299:
-            logger.warning(response.content)
-            logger.warning(url)
+        response = self._make_request("get", url)
         return response.json()
 
     def _set_object(self, data, custom_endpoint=None):
         url = f"{self.base_url}/{self.endpoint}/" + (
             f"{custom_endpoint}/" if custom_endpoint else ""
         )
-        response = self.session.post(url, json=data)
-        if response.status_code > 299:
-            logger.warning(response.content)
-            logger.warning(url)
+        response = self._make_request("post", url, json=data)
         return response.json()
 
     def _patch_object(self, object_id, data, custom_endpoint=None, files=None):
@@ -68,22 +72,16 @@ class Api(object):
             f"{custom_endpoint}/" if custom_endpoint else ""
         )
         if files:
-            response = self.session.patch(url, files=files)
+            response = self._make_request("patch", url, files=files)
         else:
-            response = self.session.patch(url, json=data)
-        if response.status_code > 299:
-            logger.warning(response.content)
-            logger.warning(url)
+            response = self._make_request("patch", url, json=data)
         return response.json()
 
     def _delete_object(self, object_id, custom_endpoint=None):
         url = f"{self.base_url}/{self.endpoint}/{object_id}/" + (
             f"{custom_endpoint}/" if custom_endpoint else ""
         )
-        response = self.session.delete(url)
-        if response.status_code > 299:
-            logger.warning(response.content)
-            logger.warning(url)
+        response = self._make_request("delete", url)
         return response.json()
 
     def get_all(self, limit=300, *args, **kwargs) -> list:
