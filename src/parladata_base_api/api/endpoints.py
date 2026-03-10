@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import requests
 from requests.auth import HTTPBasicAuth
 
@@ -14,7 +16,7 @@ class PeopleApi(Api):
 
     def upload_image(self, person_id, image_url) -> dict:
         file_name = f"/tmp/person_{person_id}.jpg"
-        response = requests.get(image_url)
+        response = self._make_request("get", image_url)
         with open(file_name, "wb") as f:
             f.write(response.content)
         files = {"image": open(file_name, "rb")}
@@ -30,8 +32,10 @@ class SessionsApi(Api):
     endpoint = "sessions"
 
     def get_speech_count(self, id) -> int:
-        url = f"{self.base_url}/speeches/count/?session={id}"
-        data = requests.get(url).json()
+        date_str = datetime.now().date().strftime("%Y-%m-%d")
+        url = f"{self.base_url}/speeches/count/?session={id}&valid_on={date_str}"
+        response = self._make_request("get", url)
+        data = response.json()
         if "count" in data.keys():
             return data["count"]
         else:

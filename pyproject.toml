@@ -7,13 +7,17 @@ packages = ["src/parladata_base_api"]
 
 [project]
 name = "parladata-base-api"
-version = "0.3.3"
+version = "0.3.4"
 authors = [
   { name="Danes je nov dan", email="tech@danesjenovdan.si" },
 ]
 description = "Cached api for parladata"
 readme = "README.md"
 requires-python = ">=3.7"
+dependencies = [
+    "requests>=2.25.0",
+    "tenacity>=9.1.4",
+]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
