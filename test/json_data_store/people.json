@@ -1,0 +1,107 @@
+{
+    "count": 10,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "id": 1,
+            "created_at": "2026-03-18T11:52:19.904686",
+            "updated_at": "2026-03-18T11:52:23.753303",
+            "name": "Anna Novak",
+            "parser_names": "Anna Novak",
+            "date_of_birth": null,
+            "image": null,
+            "districts": []
+        },
+        {
+            "id": 2,
+            "created_at": "2026-03-18T11:52:20.074502",
+            "updated_at": "2026-03-18T11:52:24.078240",
+            "name": "Boris Kovač",
+            "parser_names": "Boris Kovač",
+            "date_of_birth": null,
+            "image": null,
+            "districts": []
+        },
+        {
+            "id": 3,
+            "created_at": "2026-03-18T11:52:20.238708",
+            "updated_at": "2026-03-18T11:52:24.719012",
+            "name": "Cecilia Horvat",
+            "parser_names": "Cecilia Horvat",
+            "date_of_birth": null,
+            "image": null,
+            "districts": []
+        },
+        {
+            "id": 4,
+            "created_at": "2026-03-18T11:52:20.403418",
+            "updated_at": "2026-03-18T11:52:25.364868",
+            "name": "David Krajnc",
+            "parser_names": "David Krajnc",
+            "date_of_birth": null,
+            "image": null,
+            "districts": []
+        },
+        {
+            "id": 5,
+            "created_at": "2026-03-18T11:52:20.567658",
+            "updated_at": "2026-03-18T11:52:25.689515",
+            "name": "Eva Zupan",
+            "parser_names": "Eva Zupan",
+            "date_of_birth": null,
+            "image": null,
+            "districts": []
+        },
+        {
+            "id": 6,
+            "created_at": "2026-03-18T11:52:20.733467",
+            "updated_at": "2026-03-18T11:52:26.338580",
+            "name": "Filip Mlakar",
+            "parser_names": "Filip Mlakar",
+            "date_of_birth": null,
+            "image": null,
+            "districts": []
+        },
+        {
+            "id": 7,
+            "created_at": "2026-03-18T11:52:20.901935",
+            "updated_at": "2026-03-18T11:52:26.977953",
+            "name": "Greta Potočnik",
+            "parser_names": "Greta Potočnik",
+            "date_of_birth": null,
+            "image": null,
+            "districts": []
+        },
+        {
+            "id": 8,
+            "created_at": "2026-03-18T11:52:21.068628",
+            "updated_at": "2026-03-18T11:52:27.302517",
+            "name": "Henrik Pavlič",
+            "parser_names": "Henrik Pavlič",
+            "date_of_birth": null,
+            "image": null,
+            "districts": []
+        },
+        {
+            "id": 9,
+            "created_at": "2026-03-18T11:52:21.233748",
+            "updated_at": "2026-03-18T11:52:27.945007",
+            "name": "Irena Golob",
+            "parser_names": "Irena Golob",
+            "date_of_birth": null,
+            "image": null,
+            "districts": []
+        },
+        {
+            "id": 10,
+            "created_at": "2026-03-18T11:52:21.401251",
+            "updated_at": "2026-03-18T11:52:28.274060",
+            "name": "Jana Vidmar",
+            "parser_names": "Jana Vidmar",
+            "date_of_birth": null,
+            "image": null,
+            "districts": []
+        }
+    ]
+}

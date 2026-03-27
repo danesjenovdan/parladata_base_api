@@ -412,6 +412,7 @@ class MembershipStorage(Storage):
                     "organization": org_id,
                     "role": role,
                     "start_time": start_time,
+                    "end_time": None,
                     "mandate": self.storage.mandate_id,
                     "on_behalf_of": None,
                 }
@@ -427,6 +428,7 @@ class MembershipStorage(Storage):
                     "organization": organization.id,
                     "role": "voter",
                     "start_time": start_time,
+                    "end_time": None,
                     "mandate": self.storage.mandate_id,
                     "on_behalf_of": on_behalf_of.id if on_behalf_of else None,
                 }
@@ -530,6 +532,7 @@ class MembershipStorage(Storage):
                     "organization": organization.id,
                     "role": role,
                     "start_time": start_time,
+                    "end_time": None,
                     "mandate": self.storage.mandate_id,
                     "on_behalf_of": None,
                 }
@@ -545,6 +548,7 @@ class MembershipStorage(Storage):
                     "organization": organization.id,
                     "role": "voter",
                     "start_time": start_time,
+                    "end_time": None,
                     "mandate": self.storage.mandate_id,
                     "on_behalf_of": on_behalf_of.id if on_behalf_of else None,
                 }

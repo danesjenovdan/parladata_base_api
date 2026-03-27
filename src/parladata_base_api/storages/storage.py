@@ -22,15 +22,22 @@ class DataStorage(object):
         mandate_id: int,
         mandate_start_time: str,
         main_org_id: int,
-        api_url: str,
-        api_auth_username: str,
-        api_auth_password: str,
+        api_url: str = None,
+        api_auth_username: str = None,
+        api_auth_password: str = None,
+        json_data_path: str = None,
     ) -> None:
         self.mandate_start_time = mandate_start_time
         self.mandate_id = mandate_id
         self.main_org_id = main_org_id
+        self.json_data_path = json_data_path
 
-        self.parladata_api = ParladataApi(api_url, api_auth_username, api_auth_password)
+        self.parladata_api = ParladataApi(
+            api_url,
+            api_auth_username,
+            api_auth_password,
+            json_data_path,
+        )
 
         logging.info(
             f"Initialize storages for mandate {mandate_id} with start time {mandate_start_time}"

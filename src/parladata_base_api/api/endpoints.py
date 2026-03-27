@@ -129,39 +129,60 @@ class MandatesApi(Api):
 
 
 class ParladataApi(object):
-    def __init__(self, api_url, api_user, api_password):
+    def __init__(
+        self, api_url=None, api_user=None, api_password=None, json_data_path=None
+    ):
         self.base_url = api_url
+        self.json_data_path = json_data_path
         self.session = requests.Session()
-        self.session.auth = HTTPBasicAuth(api_user, api_password)
 
-        self.sessions = SessionsApi(self.session, self.base_url)
-        self.people = PeopleApi(self.session, self.base_url)
-        self.organizations = OrganizationsApi(self.session, self.base_url)
-        self.votes = VotesApi(self.session, self.base_url)
-        self.motions = MotionsApi(self.session, self.base_url)
-        self.agenda_items = AgendaItemsApi(self.session, self.base_url)
-        self.questions = QuestionsApi(self.session, self.base_url)
-        self.answers = AnswersApi(self.session, self.base_url)
+        if self.base_url and api_user is not None and api_password is not None:
+            self.session.auth = HTTPBasicAuth(api_user, api_password)
+
+        self.sessions = SessionsApi(self.session, self.base_url, self.json_data_path)
+        self.people = PeopleApi(self.session, self.base_url, self.json_data_path)
+        self.organizations = OrganizationsApi(
+            self.session, self.base_url, self.json_data_path
+        )
+        self.votes = VotesApi(self.session, self.base_url, self.json_data_path)
+        self.motions = MotionsApi(self.session, self.base_url, self.json_data_path)
+        self.agenda_items = AgendaItemsApi(
+            self.session, self.base_url, self.json_data_path
+        )
+        self.questions = QuestionsApi(self.session, self.base_url, self.json_data_path)
+        self.answers = AnswersApi(self.session, self.base_url, self.json_data_path)
         self.public_person_questions = PublicPersonQuestionsApi(
-            self.session, self.base_url
+            self.session, self.base_url, self.json_data_path
         )
-        self.public_person_answers = PublicPersonAnswersApi(self.session, self.base_url)
-        self.legislation = LegislationApi(self.session, self.base_url)
+        self.public_person_answers = PublicPersonAnswersApi(
+            self.session, self.base_url, self.json_data_path
+        )
+        self.legislation = LegislationApi(
+            self.session, self.base_url, self.json_data_path
+        )
         self.legislation_classifications = LegislationClassificationsApi(
-            self.session, self.base_url
+            self.session, self.base_url, self.json_data_path
         )
-        self.procedures = ProceduresApi(self.session, self.base_url)
-        self.procedure_phases = ProcedurePhasesApi(self.session, self.base_url)
+        self.procedures = ProceduresApi(
+            self.session, self.base_url, self.json_data_path
+        )
+        self.procedure_phases = ProcedurePhasesApi(
+            self.session, self.base_url, self.json_data_path
+        )
         self.legislation_consideration = LegislationConsiderationApi(
-            self.session, self.base_url
+            self.session, self.base_url, self.json_data_path
         )
-        self.legislation_statuses = LegislationStatusesApi(self.session, self.base_url)
-        self.person_memberships = PersonMembershipsApi(self.session, self.base_url)
+        self.legislation_statuses = LegislationStatusesApi(
+            self.session, self.base_url, self.json_data_path
+        )
+        self.person_memberships = PersonMembershipsApi(
+            self.session, self.base_url, self.json_data_path
+        )
         self.organizations_memberships = OrganizationsMembershipsApi(
-            self.session, self.base_url
+            self.session, self.base_url, self.json_data_path
         )
-        self.areas = AreasApi(self.session, self.base_url)
-        self.speeches = SpeechesApi(self.session, self.base_url)
-        self.ballots = BallotsApi(self.session, self.base_url)
-        self.links = LinksApi(self.session, self.base_url)
-        self.mandates = MandatesApi(self.session, self.base_url)
+        self.areas = AreasApi(self.session, self.base_url, self.json_data_path)
+        self.speeches = SpeechesApi(self.session, self.base_url, self.json_data_path)
+        self.ballots = BallotsApi(self.session, self.base_url, self.json_data_path)
+        self.links = LinksApi(self.session, self.base_url, self.json_data_path)
+        self.mandates = MandatesApi(self.session, self.base_url, self.json_data_path)

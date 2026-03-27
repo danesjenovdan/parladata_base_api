@@ -1,0 +1,39 @@
+{
+    "count": 4,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "id": 1,
+            "member": 2,
+            "organization": 1,
+            "start_time": "2022-01-01T00:00:00",
+            "end_time": null,
+            "mandate": 1
+        },
+        {
+            "id": 2,
+            "member": 3,
+            "organization": 2,
+            "start_time": "2022-01-01T00:00:00",
+            "end_time": null,
+            "mandate": 1
+        },
+        {
+            "id": 3,
+            "member": 4,
+            "organization": 2,
+            "start_time": "2022-01-01T00:00:00",
+            "end_time": null,
+            "mandate": 1
+        },
+        {
+            "id": 4,
+            "member": 5,
+            "organization": 2,
+            "start_time": "2022-01-01T00:00:00",
+            "end_time": null,
+            "mandate": 1
+        }
+    ]
+}
