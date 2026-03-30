@@ -98,7 +98,7 @@ class ParladataAPIUpdateTester:
         # mandate_id = self.created_ids["mandate"]
         mandate_id = 1  # self.created_ids["mandate"]
         # root_org_id = self.created_ids["organizations"][1]  # Root org
-        house_org_id = 1  # self.created_ids["organizations"][2]  # House org
+        house_org_id = 2  # self.created_ids["organizations"][2]  # House org
         if self.db_mode:
             print("self.api_url", self.api_url)
             self.temp_storage = DataStorage(

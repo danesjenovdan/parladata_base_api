@@ -64,6 +64,14 @@ class MembershipUpdateIntegrationTest(unittest.TestCase):
             if membership["member"] == member_id and membership["end_time"] is None
         ]
 
+    def _all_json_memberships(self, member_id):
+        memberships = self._read_results("person-memberships.json")
+        return [
+            membership
+            for membership in memberships
+            if membership["member"] == member_id
+        ]
+
     def test_update_pipeline_loads_json_and_storage(self):
         json_memberships = self._read_results("person-memberships.json")
         self.assertGreater(len(json_memberships), 0)
@@ -156,7 +164,7 @@ class MembershipUpdateIntegrationTest(unittest.TestCase):
         )
 
         person = self.storage.people_storage.get_person_by_id(cecilija_id)
-        self.assertGreater(len(person.active_memberships), 0)
+        self.assertEqual(len(person.active_memberships), 0)
         self.assertTrue(
             all(
                 membership.end_time is not None
