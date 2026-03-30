@@ -35,32 +35,7 @@ jobs:
       - name: Bump patch version in pyproject.toml
         id: bump
         run: |
-          python - << 'PY'
-          import re
-          from pathlib import Path
-
-          pyproject = Path("pyproject.toml")
-          content = pyproject.read_text(encoding="utf-8")
-          match = re.search(r'version\s*=\s*"(\d+)\.(\d+)\.(\d+)"', content)
-          if not match:
-              raise SystemExit("Could not find semantic version in pyproject.toml")
-
-          major, minor, patch = map(int, match.groups())
-          old_version = f"{major}.{minor}.{patch}"
-          new_version = f"{major}.{minor}.{patch + 1}"
-
-          updated = re.sub(
-              r'version\s*=\s*"\d+\.\d+\.\d+"',
-              f'version = "{new_version}"',
-              content,
-              count=1,
-          )
-          pyproject.write_text(updated, encoding="utf-8")
-
-          with open("$GITHUB_OUTPUT", "a", encoding="utf-8") as out:
-              out.write(f"old_version={old_version}\n")
-              out.write(f"new_version={new_version}\n")
-          PY
+          python .github/scripts/bump_version.py
 
       - name: Commit version bump
         run: |
