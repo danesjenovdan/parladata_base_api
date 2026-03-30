@@ -26,10 +26,34 @@ jobs:
       - name: Run test suite
         run: python -m unittest
 
+  formatting:
+    name: Check code formatting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install formatting tools
+        run: |
+          pip install black isort
+
+      - name: Check formatting with black
+        run: |
+          black . --check --diff
+
+      - name: Check formatting with isort
+        run: |
+          isort . --check --diff --profile black
+
   pull-requests:
     name: Create PR dev -> main
     runs-on: ubuntu-latest
-    needs: tests
+    needs: [tests, formatting]
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
