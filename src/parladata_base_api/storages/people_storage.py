@@ -94,7 +94,10 @@ class PeopleStorage(Storage):
             return person
         elif not add:
             return None
-        person_data.update({"name": name.strip().title(), "parser_names": name.strip()})
+        parser_names = person_data.get("parser_names", "")
+        if not parser_names:
+            parser_names = name.strip()
+        person_data.update({"name": name.strip().title(), "parser_names": parser_names})
         if prefix:
             person_data["honorific_prefix"] = prefix
         response_data = self.parladata_api.people.set(person_data)
